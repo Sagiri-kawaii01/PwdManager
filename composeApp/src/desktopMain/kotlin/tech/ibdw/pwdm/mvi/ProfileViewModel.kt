@@ -4,8 +4,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import tech.ibdw.pwdm.cfg.Config
 import tech.ibdw.pwdm.cfg.Entry
 import tech.ibdw.pwdm.cfg.Page
@@ -40,10 +43,26 @@ class ProfileViewModel(
                 val page = Page()
                 _state.value.pages.add(page)
                 _pageState.value.add(page)
+                saveProfile()
             }
             is ProfileEvent.LoadPage -> {
                 _entryState.value = _pageState.value[event.index].entries.toMutableStateList()
             }
+            ProfileEvent.SaveProfile -> {
+                saveProfile()
+            }
+            is ProfileEvent.DeletePage -> {
+                _pageState.value.removeAt(event.index)
+                _state.value.pages.removeAt(event.index)
+                saveProfile()
+            }
         }
     }
+
+    private fun saveProfile() {
+        viewModelScope.launch(Dispatchers.IO) {
+            saveProfile(_state.value)
+        }
+    }
+
 }

@@ -1,13 +1,12 @@
 package tech.ibdw.pwdm.view
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.onClick
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -15,8 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
 import tech.ibdw.pwdm.cfg.Config
 import tech.ibdw.pwdm.cfg.Page
@@ -30,6 +28,7 @@ import tech.ibdw.pwdm.saveProfile
  * @date 2024/8/7 16:06
  * @since
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SideBar(
     modifier: Modifier,
@@ -49,6 +48,32 @@ fun SideBar(
     viewModel.onEvent(ProfileEvent.LoadProfile(defaultIndex))
     val pageState by viewModel.pageState.collectAsState()
 
+    var pageEditName by remember { mutableStateOf("") }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var onEditPageName: (String) -> Unit by remember { mutableStateOf({}) }
+
+    if (showEditDialog) {
+        PageNameEditDialog(pageEditName, {
+            showEditDialog = false
+        }) {
+            onEditPageName(it)
+            showEditDialog = false
+        }
+    }
+
+    var pageDeleteName by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var onDeletePage: () -> Unit by remember { mutableStateOf({}) }
+
+    if (showDeleteDialog) {
+        PageDeleteDialog(pageDeleteName, {
+            showDeleteDialog = false
+        }) {
+            onDeletePage()
+            showDeleteDialog = false
+        }
+    }
+
     Card (
         modifier
             .widthIn(min = 100.dp, max = 200.dp)
@@ -66,14 +91,17 @@ fun SideBar(
                 Spacer(Modifier.height(8.dp))
                 LazyColumn{
                     itemsIndexed(pageState) { index, page ->
+                        var showDropMenu by remember { mutableStateOf(false) }
                         Row(
                             modifier = Modifier
-                                .clickable {
+                                .onClick(matcher = PointerMatcher.mouse(PointerButton.Primary)) {
                                     selectPageIndex = index
                                     viewModel.onEvent(ProfileEvent.LoadPage(index))
                                 }
+                                .onClick(matcher = PointerMatcher.mouse(PointerButton.Secondary)) {
+                                    showDropMenu = true
+                                }
                                 .pointerHoverIcon(PointerIcon.Hand)
-
                                 .run {
                                     if (selectPageIndex == index) {
                                         this.border(
@@ -86,6 +114,38 @@ fun SideBar(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(page.name)
+                            if (showDropMenu) {
+                                DropdownMenu(
+                                    expanded = showDropMenu,
+                                    onDismissRequest = { showDropMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            pageEditName = page.name
+                                            onEditPageName = {
+                                                page.name = it
+                                                viewModel.onEvent(ProfileEvent.SaveProfile)
+                                            }
+                                            showEditDialog = true
+                                            showDropMenu = false
+                                        }
+                                    ) {
+                                        Text("重命名")
+                                    }
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            pageDeleteName = page.name
+                                            onDeletePage = {
+                                                viewModel.onEvent(ProfileEvent.DeletePage(index))
+                                            }
+                                            showDeleteDialog = true
+                                            showDropMenu = false
+                                        }
+                                    ) {
+                                        Text("删除")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -152,4 +212,71 @@ fun DropProfile(
             }
         }
     }
+}
+
+@Composable
+fun PageDeleteDialog(
+    value: String,
+    onCancel: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onCancel,
+        confirmButton = {
+            TextButton(onClick = {
+                onDelete()
+            }) {
+                Text("删除")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                onCancel()
+            }) {
+                Text("取消")
+            }
+        },
+        text = {
+            Text("是否删除【$value】")
+        }
+    )
+}
+
+@Composable
+fun PageNameEditDialog(
+    value: String,
+    onCancel: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(value) }
+    AlertDialog(
+        onDismissRequest = onCancel,
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(text)
+            }) {
+                Text("保存")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                onCancel()
+            }) {
+                Text("取消")
+            }
+        },
+        title = {
+            Text("编辑【$value】标题")
+        },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = {
+                        text = it
+                    }
+                )
+            }
+        }
+    )
 }

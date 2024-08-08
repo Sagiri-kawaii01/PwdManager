@@ -23,8 +23,8 @@ class Page {
 
 class Entry {
     var name = "未命名"
-    var account = "account"
-    var password = "password"
+    var account = ""
+    var password = ""
     var ip: String? = null
     var port: String? = null
 }

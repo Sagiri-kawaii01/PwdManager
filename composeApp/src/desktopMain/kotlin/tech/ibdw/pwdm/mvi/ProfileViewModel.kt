@@ -26,6 +26,7 @@ class ProfileViewModel(
     private var _state = MutableStateFlow(profiles[0])
     private var _pageState = MutableStateFlow(_state.value.pages.toMutableStateList())
     private var _entryState = MutableStateFlow(mutableStateListOf<Entry>())
+    private var page = 0
     val state: StateFlow<Profile> = _state
     val pageState: StateFlow<List<Page>> = _pageState
     val entryState: StateFlow<List<Entry>> = _entryState
@@ -46,6 +47,7 @@ class ProfileViewModel(
                 saveProfile()
             }
             is ProfileEvent.LoadPage -> {
+                page = event.index
                 _entryState.value = _pageState.value[event.index].entries.toMutableStateList()
             }
             ProfileEvent.SaveProfile -> {
@@ -54,6 +56,27 @@ class ProfileViewModel(
             is ProfileEvent.DeletePage -> {
                 _pageState.value.removeAt(event.index)
                 _state.value.pages.removeAt(event.index)
+                saveProfile()
+            }
+            is ProfileEvent.EditEntry -> {
+                _entryState.value[event.index].apply {
+                    this.name = event.entry.name
+                    this.account = event.entry.account
+                    this.password = event.entry.password
+                    this.ip = event.entry.ip
+                    this.port = event.entry.port
+                }
+                _state.value.pages[page].entries = _entryState.value
+                saveProfile()
+            }
+            is ProfileEvent.DeleteEntry -> {
+                _entryState.value.removeAt(event.index)
+                _state.value.pages[page].entries = _entryState.value
+                saveProfile()
+            }
+            is ProfileEvent.AddEntry -> {
+                _entryState.value.add(event.entry)
+                _state.value.pages[page].entries.add(event.entry)
                 saveProfile()
             }
         }

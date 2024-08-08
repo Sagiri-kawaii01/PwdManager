@@ -5,17 +5,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.AccountBox
 import androidx.compose.material.icons.outlined.NetworkPing
 import androidx.compose.material.icons.outlined.Password
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +24,7 @@ import com.dokar.sonner.Toaster
 import com.dokar.sonner.ToasterState
 import com.dokar.sonner.rememberToasterState
 import tech.ibdw.pwdm.cfg.Entry
+import tech.ibdw.pwdm.mvi.ProfileEvent
 import tech.ibdw.pwdm.mvi.ProfileViewModel
 import java.awt.Toolkit
 import java.awt.datatransfer.Clipboard
@@ -45,12 +43,83 @@ fun Home(
     val entries = viewModel.entryState.collectAsState()
     val toaster = rememberToasterState()
 
+    var onEditEntry: (Entry) -> Unit by remember { mutableStateOf({}) }
+    var editEntry by remember { mutableStateOf(Entry()) }
+    var showEdit by remember { mutableStateOf(false) }
+
+    var onDeleteEntry: () -> Unit by remember { mutableStateOf({}) }
+    var deleteEntry by remember { mutableStateOf(Entry()) }
+    var showDelete by remember { mutableStateOf(false) }
+
     Toaster(
         state = toaster
     )
-    LazyColumn {
-        items(entries.value) {
-            EntryCard(it, toaster)
+
+    if (showEdit) {
+        EntryEditDialog(
+            name = editEntry.name,
+            account = editEntry.account,
+            password = editEntry.password,
+            ip = editEntry.ip,
+            port = editEntry.port,
+            onCancel = {
+                showEdit = false
+            }
+        ) {
+            onEditEntry(it)
+            showEdit = false
+        }
+    }
+
+    if (showDelete) {
+        EntryDeleteDialog(
+            deleteEntry.name,
+            onCancel = {
+                showDelete = false
+            }
+        ) {
+            onDeleteEntry()
+            showDelete = false
+        }
+    }
+
+    Column(
+        verticalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn {
+            itemsIndexed(entries.value) { index, entry ->
+                EntryCard(entry, toaster, onEdit = {
+                    editEntry = entry
+                    onEditEntry = { newEntry ->
+                        viewModel.onEvent(ProfileEvent.EditEntry(newEntry, index))
+                    }
+                    showEdit = true
+                }) {
+                    deleteEntry = entry
+                    onDeleteEntry = {
+                        viewModel.onEvent(ProfileEvent.DeleteEntry(index))
+                    }
+                    showDelete = true
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.padding(bottom = 8.dp, end = 10.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(
+                onClick = {
+                    editEntry = Entry()
+                    onEditEntry = {
+                        viewModel.onEvent(ProfileEvent.AddEntry(it))
+                    }
+                    showEdit = true
+                },
+                modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+            ) {
+                Icon(Icons.Default.Add, "")
+            }
         }
     }
 }
@@ -58,7 +127,9 @@ fun Home(
 @Composable
 fun EntryCard(
     entry: Entry,
-    toaster: ToasterState
+    toaster: ToasterState,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
         Modifier
@@ -78,9 +149,7 @@ fun EntryCard(
                 }
                 Row {
                     IconButton(
-                        onClick = {
-
-                        }
+                        onClick = onEdit
                     ) {
                         Icon(Icons.Default.Edit,
                             "",
@@ -91,9 +160,7 @@ fun EntryCard(
                     }
 
                     IconButton(
-                        onClick = {
-
-                        }
+                        onClick = onDelete
                     ) {
                         Icon(Icons.Default.Delete,
                             "",
@@ -227,6 +294,134 @@ fun CopyText(
                 .pointerHoverIcon(PointerIcon.Hand)
         )
     }
+}
+
+@Composable
+fun EntryEditDialog(
+    name: String,
+    account: String,
+    password: String,
+    ip: String?,
+    port: String?,
+    onCancel: () -> Unit,
+    onSave: (Entry) -> Unit,
+) {
+    var eName by remember { mutableStateOf(name) }
+    var eAccount by remember { mutableStateOf(account) }
+    var ePassword by remember { mutableStateOf(password) }
+    var eIp by remember { mutableStateOf(ip ?: "") }
+    var ePort by remember { mutableStateOf(port ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onCancel,
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(
+                    Entry().apply {
+                        this.name = eName
+                        this.account = eAccount
+                        this.password = ePassword
+                        this.ip = eIp.ifBlank { null }
+                        this.port = ePort.ifBlank { null }
+                    }
+                )
+            }) {
+                Text("保存")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                onCancel()
+            }) {
+                Text("取消")
+            }
+        },
+        title = {
+            Text("编辑【$eName】账号信息")
+        },
+        text = {
+            Column {
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = eName,
+                    onValueChange = {
+                        eName = it
+                    },
+                    label = {
+                        Text("名称")
+                    }
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = eAccount,
+                    onValueChange = {
+                        eAccount = it
+                    },
+                    label = {
+                        Text("账号")
+                    }
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = ePassword,
+                    onValueChange = {
+                        ePassword = it
+                    },
+                    label = {
+                        Text("密码")
+                    }
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = eIp,
+                    onValueChange = {
+                        eIp = it
+                    },
+                    label = {
+                        Text("IP")
+                    }
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = ePort,
+                    onValueChange = {
+                        ePort = it
+                    },
+                    label = {
+                        Text("Port")
+                    }
+                )
+            }
+        }
+    )
+}
+
+@Composable
+fun EntryDeleteDialog(
+    value: String,
+    onCancel: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onCancel,
+        confirmButton = {
+            TextButton(onClick = {
+                onDelete()
+            }) {
+                Text("删除")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                onCancel()
+            }) {
+                Text("取消")
+            }
+        },
+        text = {
+            Text("是否删除【$value】")
+        }
+    )
 }
 
 fun writeToClipboard(text: String) {

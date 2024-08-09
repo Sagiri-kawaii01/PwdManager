@@ -40,7 +40,7 @@ compose.desktop {
 
         val version = "1.0.0"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "PwdManager"
             packageVersion = version
             windows {
@@ -49,10 +49,16 @@ compose.desktop {
 
                 packageVersion = version
                 msiPackageVersion = version
-                exePackageVersion = version
                 iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
             }
+            linux {
+                modules("java.instrument", "java.sql", "jdk.unsupported")
+                packageVersion = version
+                debPackageVersion = version
+                iconFile.set(project.file("src/desktopMain/resources/icon.png"))
+            }
             macOS {
+                modules("java.instrument", "java.sql", "jdk.unsupported")
                 packageVersion = version
                 dmgPackageVersion = version
                 pkgPackageVersion = version

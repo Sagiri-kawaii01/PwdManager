@@ -12,7 +12,15 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+
     - name: Set executable permissions for Gradle wrapper
       run: chmod +x ./gradlew
+
     - name: Build with Gradle
       run: ./gradlew packageReleaseDmg
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: my-artifacts
+        path: /Users/runner/work/PwdManager/PwdManager/composeApp/build/compose/binaries/main-release/dmg/*

@@ -37,16 +37,10 @@ fun SideBar(
     onOpenSettings: () -> Unit,
 ) {
 
-    var defaultIndex by remember { mutableStateOf(0) }
+    val defaultIndex by remember { mutableStateOf(profiles.indexOfFirst { it.name == viewModel.configState.value.defaultProfile }) }
     var selectPageIndex by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        for ((index, profile) in profiles.withIndex()) {
-            if (profile.name == viewModel.configState.value.defaultProfile) {
-                defaultIndex = index
-                break
-            }
-        }
         viewModel.onEvent(ProfileEvent.LoadProfile(defaultIndex))
     }
 
@@ -188,7 +182,7 @@ fun DropProfile(
     onSelect: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectProfileIndex by mutableStateOf(defaultIndex)
+    var selectProfileIndex by remember { mutableStateOf(defaultIndex) }
 
     Box(modifier) {
         OutlinedTextField(

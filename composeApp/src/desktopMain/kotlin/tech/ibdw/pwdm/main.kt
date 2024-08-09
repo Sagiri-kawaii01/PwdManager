@@ -1,5 +1,6 @@
 package tech.ibdw.pwdm
 
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.moandjiezana.toml.Toml
@@ -12,8 +13,9 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "密码管理器",
+        alwaysOnTop = true,
+        icon = painterResource("icon.ico")
     ) {
-        window.isAlwaysOnTop = true
         App(loadConfig(), loadProfiles())
     }
 }

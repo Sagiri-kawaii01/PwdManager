@@ -33,14 +33,14 @@ import tech.ibdw.pwdm.saveProfile
 fun SideBar(
     modifier: Modifier,
     profiles: List<Profile>,
-    config: Config,
     viewModel: ProfileViewModel,
+    onOpenSettings: () -> Unit,
 ) {
 
     var defaultIndex = 0
     var selectPageIndex by remember { mutableStateOf(0) }
     for ((index, profile) in profiles.withIndex()) {
-        if (profile.name == config.defaultProfile) {
+        if (profile.name == viewModel.configState.value.defaultProfile) {
             defaultIndex = index
             break
         }
@@ -106,7 +106,7 @@ fun SideBar(
                                     if (selectPageIndex == index) {
                                         this.border(
                                             BorderStroke(1.dp, Color.Black)
-                                        )
+                                        ).background(Color(244, 244, 244))
                                     } else this
                                 }
                                 .fillMaxWidth()
@@ -151,13 +151,25 @@ fun SideBar(
                 }
             }
 
-            OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
-                    viewModel.onEvent(ProfileEvent.AddPage)
+            Column {
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth()
+                        .pointerHoverIcon(PointerIcon.Hand),
+                    onClick = {
+                        onOpenSettings()
+                    }
+                ) {
+                    Text("Settings")
                 }
-            ) {
-                Text("Add")
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth()
+                        .pointerHoverIcon(PointerIcon.Hand),
+                    onClick = {
+                        viewModel.onEvent(ProfileEvent.AddPage)
+                    }
+                ) {
+                    Text("Add")
+                }
             }
         }
 
@@ -270,10 +282,14 @@ fun PageNameEditDialog(
         },
         text = {
             Column {
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = text,
                     onValueChange = {
                         text = it
+                    },
+                    label = {
+                        Text("标题")
                     }
                 )
             }

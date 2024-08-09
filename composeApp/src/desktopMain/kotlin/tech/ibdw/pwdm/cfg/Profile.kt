@@ -10,8 +10,6 @@ import androidx.compose.runtime.mutableStateOf
  */
 class Profile {
     var title = "本地配置"
-    var remoteAddr: String? = null
-    var secretKey: String? = null
     var name = 1
     var pages: MutableList<Page> = mutableListOf()
 }

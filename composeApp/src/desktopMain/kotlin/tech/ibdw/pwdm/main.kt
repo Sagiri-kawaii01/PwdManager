@@ -8,7 +8,6 @@ import tech.ibdw.pwdm.cfg.Config
 import tech.ibdw.pwdm.cfg.Profile
 import java.io.File
 import java.io.FileFilter
-
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
@@ -53,3 +52,9 @@ fun createDefaultProfile() {
 fun saveProfile(profile: Profile) {
     TomlWriter().write(profile, File("./profile/${profile.name}.toml"))
 }
+
+fun saveConfig(config: Config) {
+    TomlWriter().write(config, File("./conf/conf.toml"))
+}
+
+

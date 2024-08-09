@@ -40,8 +40,9 @@ fun Home(
     modifier: Modifier,
     viewModel: ProfileViewModel,
 ) {
-    val entries = viewModel.entryState.collectAsState()
+    val entries by viewModel.entryState.collectAsState()
     val toaster = rememberToasterState()
+    val config by viewModel.configState.collectAsState()
 
     var onEditEntry: (Entry) -> Unit by remember { mutableStateOf({}) }
     var editEntry by remember { mutableStateOf(Entry()) }
@@ -88,14 +89,17 @@ fun Home(
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn {
-            itemsIndexed(entries.value) { index, entry ->
-                EntryCard(entry, toaster, onEdit = {
-                    editEntry = entry
-                    onEditEntry = { newEntry ->
-                        viewModel.onEvent(ProfileEvent.EditEntry(newEntry, index))
+            itemsIndexed(entries) { index, entry ->
+                EntryCard(entry, toaster,
+                    showPassword = config.showPassword,
+                    onEdit = {
+                        editEntry = entry
+                        onEditEntry = { newEntry ->
+                            viewModel.onEvent(ProfileEvent.EditEntry(newEntry, index))
+                        }
+                        showEdit = true
                     }
-                    showEdit = true
-                }) {
+                ) {
                     deleteEntry = entry
                     onDeleteEntry = {
                         viewModel.onEvent(ProfileEvent.DeleteEntry(index))
@@ -128,6 +132,7 @@ fun Home(
 fun EntryCard(
     entry: Entry,
     toaster: ToasterState,
+    showPassword: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -178,6 +183,7 @@ fun EntryCard(
             ) {
                 CopyText(
                     title = "账号：",
+                    text = entry.account,
                     value = entry.account,
                     modifier = Modifier
                         .padding(
@@ -196,6 +202,7 @@ fun EntryCard(
                 if (!entry.ip.isNullOrBlank()) {
                     CopyText(
                         title = "IP：",
+                        text = entry.ip!!,
                         value = entry.ip!!,
                         modifier = Modifier
                             .padding(
@@ -220,6 +227,11 @@ fun EntryCard(
             ) {
                 CopyText(
                     title = "密码：",
+                    text = if (showPassword) {
+                        entry.password
+                    } else {
+                        "*" * entry.password.length
+                    },
                     value = entry.password,
                     modifier = Modifier
                         .padding(
@@ -238,6 +250,7 @@ fun EntryCard(
                 if (!entry.port.isNullOrBlank()) {
                     CopyText(
                         title = "Port：",
+                        text = entry.port!!,
                         value = entry.port!!,
                         modifier = Modifier
                             .padding(
@@ -259,9 +272,18 @@ fun EntryCard(
     }
 }
 
+private operator fun String.times(i: Int): String {
+    var s = ""
+    for (i1 in 0 until i) {
+        s += this
+    }
+    return s
+}
+
 @Composable
 fun CopyText(
     title: String,
+    text: String,
     value: String,
     modifier: Modifier = Modifier,
     toaster: ToasterState,
@@ -275,7 +297,7 @@ fun CopyText(
         Spacer(modifier = Modifier.width(8.dp))
         Text(title)
         Spacer(modifier = Modifier.width(8.dp))
-        Text(value)
+        Text(text)
         Spacer(modifier = Modifier.width(8.dp))
         Icon(
             Icons.Default.ContentCopy,

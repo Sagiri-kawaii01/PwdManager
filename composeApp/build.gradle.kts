@@ -42,7 +42,9 @@ compose.desktop {
             packageVersion = "1.0.0"
             windows {
                 includeAllModules = true
+                iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
             }
+
         }
 
     }

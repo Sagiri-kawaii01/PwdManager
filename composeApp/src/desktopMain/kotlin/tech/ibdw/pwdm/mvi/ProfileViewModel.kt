@@ -14,6 +14,7 @@ import tech.ibdw.pwdm.cfg.Entry
 import tech.ibdw.pwdm.cfg.Page
 import tech.ibdw.pwdm.cfg.Profile
 import tech.ibdw.pwdm.saveProfile
+import tech.ibdw.pwdm.saveConfig
 
 /**
  * @author <a href="https://github.com/Sagiri-kawaii01">lgz</a>
@@ -21,12 +22,18 @@ import tech.ibdw.pwdm.saveProfile
  * @since
  */
 class ProfileViewModel(
-    val profiles: List<Profile>
+    profiles: List<Profile>,
+    config: Config
 ): ViewModel() {
-    private var _state = MutableStateFlow(profiles[0])
+    private var _profiles = MutableStateFlow(profiles.toMutableStateList())
+    private var _state = MutableStateFlow(_profiles.value[0])
+    private var _config = MutableStateFlow(config)
     private var _pageState = MutableStateFlow(_state.value.pages.toMutableStateList())
     private var _entryState = MutableStateFlow(mutableStateListOf<Entry>())
     private var page = 0
+
+    val profiles: StateFlow<List<Profile>> = _profiles
+    val configState: StateFlow<Config> = _config
     val state: StateFlow<Profile> = _state
     val pageState: StateFlow<List<Page>> = _pageState
     val entryState: StateFlow<List<Entry>> = _entryState
@@ -34,8 +41,8 @@ class ProfileViewModel(
     fun onEvent(event: ProfileEvent) {
         when (event) {
             is ProfileEvent.LoadProfile -> {
-                _state.value = profiles[event.index]
-                _pageState.value = profiles[event.index].pages.toMutableStateList()
+                _state.value = _profiles.value[event.index]
+                _pageState.value = _profiles.value[event.index].pages.toMutableStateList()
                 if (_pageState.value.isNotEmpty()) {
                     _entryState.value = _pageState.value[0].entries.toMutableStateList()
                 }
@@ -79,12 +86,49 @@ class ProfileViewModel(
                 _state.value.pages[page].entries.add(event.entry)
                 saveProfile()
             }
+            is ProfileEvent.EditConfig -> {
+                _config.value = Config().apply {
+                    this.defaultProfile = event.config.defaultProfile
+                    this.showPassword = event.config.showPassword
+                }
+                saveConfig()
+            }
+            is ProfileEvent.SetDefault -> {
+                _config.value = Config().apply {
+                    this.defaultProfile = _profiles.value[event.profileIndex].name
+                    this.showPassword = _config.value.showPassword
+                }
+                saveConfig()
+            }
+            ProfileEvent.SaveConfig -> {
+                saveConfig()
+            }
+            is ProfileEvent.EditProfile -> {
+                _profiles.value[event.index] = Profile().apply {
+                    this.pages = event.profile.pages
+                    this.name = event.profile.name
+                    this.title = event.profile.title
+                }
+            }
+            ProfileEvent.SaveAllProfile -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    _profiles.value.forEach {
+                        saveProfile(it)
+                    }
+                }
+            }
         }
     }
 
     private fun saveProfile() {
         viewModelScope.launch(Dispatchers.IO) {
             saveProfile(_state.value)
+        }
+    }
+
+    private fun saveConfig() {
+        viewModelScope.launch(Dispatchers.IO) {
+            saveConfig(_config.value)
         }
     }
 

@@ -37,7 +37,7 @@ fun SideBar(
     onOpenSettings: () -> Unit,
 ) {
 
-    var defaultIndex = 0
+    var defaultIndex by remember { mutableStateOf(0) }
     var selectPageIndex by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
@@ -188,7 +188,7 @@ fun DropProfile(
     onSelect: (Int) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectProfileIndex by remember { mutableStateOf(defaultIndex) }
+    var selectProfileIndex by mutableStateOf(defaultIndex)
 
     Box(modifier) {
         OutlinedTextField(

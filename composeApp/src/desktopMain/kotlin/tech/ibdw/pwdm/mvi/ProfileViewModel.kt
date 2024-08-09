@@ -85,7 +85,7 @@ class ProfileViewModel(
             }
             is ProfileEvent.AddEntry -> {
                 _entryState.value.add(event.entry)
-                _state.value.pages[page].entries.add(event.entry)
+                _state.value.pages[page].entries = _entryState.value
                 saveProfile()
             }
             is ProfileEvent.EditConfig -> {

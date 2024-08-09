@@ -15,7 +15,10 @@ import androidx.compose.material.icons.outlined.Password
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
@@ -363,6 +366,11 @@ fun EntryEditDialog(
         },
         text = {
             Column {
+                val focusRequester1 = remember { FocusRequester() }
+                val focusRequester2 = remember { FocusRequester() }
+                val focusRequester3 = remember { FocusRequester() }
+                val focusRequester4 = remember { FocusRequester() }
+                val focusRequester5 = remember { FocusRequester() }
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = eName,
@@ -371,7 +379,8 @@ fun EntryEditDialog(
                     },
                     label = {
                         Text("名称")
-                    }
+                    },
+                    modifier = Modifier.nextFocus(focusRequester1, focusRequester2)
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
@@ -381,7 +390,8 @@ fun EntryEditDialog(
                     },
                     label = {
                         Text("账号")
-                    }
+                    },
+                    modifier = Modifier.nextFocus(focusRequester2, focusRequester3)
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
@@ -391,7 +401,8 @@ fun EntryEditDialog(
                     },
                     label = {
                         Text("密码")
-                    }
+                    },
+                    modifier = Modifier.nextFocus(focusRequester3, focusRequester4)
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
@@ -401,7 +412,8 @@ fun EntryEditDialog(
                     },
                     label = {
                         Text("IP")
-                    }
+                    },
+                    modifier = Modifier.nextFocus(focusRequester4, focusRequester5)
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
@@ -411,7 +423,8 @@ fun EntryEditDialog(
                     },
                     label = {
                         Text("Port")
-                    }
+                    },
+                    modifier = Modifier.nextFocus(focusRequester5, focusRequester1)
                 )
             }
         }
@@ -450,4 +463,22 @@ fun writeToClipboard(text: String) {
     val stringSelection = StringSelection(text)
     val clipboard: Clipboard = Toolkit.getDefaultToolkit().systemClipboard
     clipboard.setContents(stringSelection, null)
+}
+
+private fun Modifier.nextFocus(focus1: FocusRequester, focus2: FocusRequester): Modifier {
+    return this.focusRequester(focus1)
+        .onPreviewKeyEvent { event ->
+            if (event.type == KeyEventType.KeyDown) {
+                when (event.key) {
+                    Key.Tab -> {
+                        focus2.requestFocus()
+                        true
+                    }
+                    Key.Enter -> true
+                    else -> false
+                }
+            } else {
+                false
+            }
+        }
 }

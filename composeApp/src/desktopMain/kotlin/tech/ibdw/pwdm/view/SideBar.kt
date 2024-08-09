@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
 import tech.ibdw.pwdm.cfg.Config
@@ -288,6 +289,16 @@ fun PageNameEditDialog(
                     },
                     label = {
                         Text("标题")
+                    },
+                    modifier = Modifier.onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown) {
+                            when (event.key) {
+                                Key.Enter, Key.Tab -> true
+                                else -> false
+                            }
+                        } else {
+                            false
+                        }
                     }
                 )
             }

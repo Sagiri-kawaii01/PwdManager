@@ -38,8 +38,6 @@ compose.desktop {
     application {
         mainClass = "tech.ibdw.pwdm.MainKt"
 
-        jvmArgs("-Xmx32m", "-Xms32m", "-XX:MaxMetaspaceSize=32m", "-Xss512k")
-
         val version = "1.0.0"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe)
@@ -47,10 +45,11 @@ compose.desktop {
             packageVersion = version
             windows {
 //                includeAllModules = true
+                modules("java.instrument", "java.sql", "jdk.unsupported")
+
                 packageVersion = version
                 msiPackageVersion = version
                 exePackageVersion = version
-                modules("java.instrument", "java.sql", "jdk.unsupported")
                 iconFile.set(project.file("src/desktopMain/resources/icon.ico"))
             }
             macOS {

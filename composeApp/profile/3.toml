@@ -1,3 +1,10 @@
 title = "测试账号"
 name = 3
-pages = []
+
+[[pages]]
+name = "腾讯"
+
+[[pages.entries]]
+name = "QQ"
+account = "1104738025"
+password = "abc123"

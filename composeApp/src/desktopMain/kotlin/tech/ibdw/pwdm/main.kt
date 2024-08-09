@@ -21,7 +21,7 @@ fun main() = application {
 }
 
 fun loadProfiles(): MutableList<Profile> {
-    val dict = File("./profile")
+    val dict = File("${System.getProperty("user.home")}/pwdm/profile")
     val profiles = mutableListOf<Profile>()
     dict.listFiles(FileFilter {
         it.name.endsWith(".toml")
@@ -32,7 +32,7 @@ fun loadProfiles(): MutableList<Profile> {
 }
 
 fun loadConfig(): Config {
-    val cfg = File("./conf/conf.toml")
+    val cfg = File("${System.getProperty("user.home")}/pwdm/conf/conf.toml")
     if (!cfg.exists()) {
         createDefaultConfig(cfg)
     }
@@ -40,23 +40,23 @@ fun loadConfig(): Config {
 }
 
 fun createDefaultConfig(file: File) {
-    file.parentFile.mkdir()
+    file.parentFile.mkdirs()
     TomlWriter().write(Config(), file)
     createDefaultProfile()
 }
 
 fun createDefaultProfile() {
-    val profile = File("./profile/1.toml")
-    profile.parentFile.mkdir()
+    val profile = File("${System.getProperty("user.home")}/pwdm/profile/1.toml")
+    profile.parentFile.mkdirs()
     TomlWriter().write(Profile(), profile)
 }
 
 fun saveProfile(profile: Profile) {
-    TomlWriter().write(profile, File("./profile/${profile.name}.toml"))
+    TomlWriter().write(profile, File("${System.getProperty("user.home")}/pwdm/profile/${profile.name}.toml"))
 }
 
 fun saveConfig(config: Config) {
-    TomlWriter().write(config, File("./conf/conf.toml"))
+    TomlWriter().write(config, File("${System.getProperty("user.home")}/pwdm/conf/conf.toml"))
 }
 
 

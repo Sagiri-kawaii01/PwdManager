@@ -45,6 +45,8 @@ class ProfileViewModel(
                 _pageState.value = _profiles.value[event.index].pages.toMutableStateList()
                 if (_pageState.value.isNotEmpty()) {
                     _entryState.value = _pageState.value[0].entries.toMutableStateList()
+                } else {
+                    _entryState.value = mutableStateListOf()
                 }
             }
             ProfileEvent.AddPage -> {

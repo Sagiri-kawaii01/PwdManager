@@ -39,13 +39,17 @@ fun SideBar(
 
     var defaultIndex = 0
     var selectPageIndex by remember { mutableStateOf(0) }
-    for ((index, profile) in profiles.withIndex()) {
-        if (profile.name == viewModel.configState.value.defaultProfile) {
-            defaultIndex = index
-            break
+
+    LaunchedEffect(Unit) {
+        for ((index, profile) in profiles.withIndex()) {
+            if (profile.name == viewModel.configState.value.defaultProfile) {
+                defaultIndex = index
+                break
+            }
         }
+        viewModel.onEvent(ProfileEvent.LoadProfile(defaultIndex))
     }
-    viewModel.onEvent(ProfileEvent.LoadProfile(defaultIndex))
+
     val pageState by viewModel.pageState.collectAsState()
 
     var pageEditName by remember { mutableStateOf("") }

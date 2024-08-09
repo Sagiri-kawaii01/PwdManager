@@ -14,7 +14,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "密码管理器",
         alwaysOnTop = true,
-        icon = painterResource("icon.icns")
+        icon = painterResource("icon.ico")
     ) {
         App(loadConfig(), loadProfiles())
     }

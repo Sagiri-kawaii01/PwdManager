@@ -86,6 +86,7 @@ fun SideBar(
             Column {
                 DropProfile(profiles, defaultIndex) {
                     viewModel.onEvent(ProfileEvent.LoadProfile(it))
+                    selectPageIndex = 0
                 }
                 Spacer(Modifier.height(8.dp))
                 LazyColumn{

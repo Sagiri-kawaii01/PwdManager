@@ -1,6 +1,5 @@
 name: Build and Package for macOS
 
-on: [push]
 
 jobs:
   build:
